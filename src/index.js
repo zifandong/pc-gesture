@@ -106,9 +106,6 @@ class PCGesture{
         windowEl.addEventListener('wheel', this.wheel, false)
         imgEl.addEventListener('dblclick',this.dblclick,false)
         imgEl.addEventListener('mousedown',this.mousedown,false)
-
-        
-
         
     }
     /**
@@ -120,8 +117,8 @@ class PCGesture{
         windowEl.removeEventListener('WheelEvent', this.wheel, false)
         imgEl.removeEventListener('dbclick',this.dbclick,false)
         imgEl.removeEventListener('mousedown',this.mousedown,false)
-        imgEl.removeEventListener('mousemove',this.mousemove,false)
-        imgEl.removeEventListener('mouseup',this.mouseup,false)
+        document.removeEventListener('mousemove',this.mousemove,false)
+        document.removeEventListener('mouseup',this.mouseup,false)
     }
 
     /**
@@ -129,23 +126,84 @@ class PCGesture{
      * 鼠标滚轮实现放大缩小
      */
     wheel(event){
-        const {maxScale,minScale,step,windowWidth,windowHeight,defaultImgSize}=this
-        let newScale=this.transferInfo.scale
         if(event.wheelDelta>0){
             //向上滚动  放大
-            newScale+=step
+            this.zoom('out')
         }else{
             //缩小
+            this.zoom('in')
+        }
+    }
+    /**
+     * 
+     * 放大或缩小
+     */
+
+    zoom(type='out'){
+        const {maxScale,minScale,step,windowWidth,windowHeight,defaultImgSize}=this
+        // 计算滚轮滑动后的新scale
+        let newScale=this.transferInfo.scale
+        if(type==='out'){
+            newScale+=step
+            //放大
+        }else{
             newScale-=step
         }
         newScale=newScale>maxScale?maxScale:newScale
         newScale=newScale<minScale?minScale:newScale
-        this.transferInfo={
-            x:(windowWidth - defaultImgSize.width) * 0.5,
-            y:(windowHeight - defaultImgSize.height) * 0.5,
+
+        //缩放比率
+        const ratio=newScale/this.transferInfo.scale
+
+         //原始x、y偏移量
+        const initX = (windowWidth - defaultImgSize.width) * 0.5
+        const initY = (windowHeight - defaultImgSize.height) * 0.5 
+
+        const origin = {
+            x: (ratio - 1) * defaultImgSize.width * 0.5,
+            y: (ratio - 1) * defaultImgSize.height * 0.5,
+        }
+        const windowTop = windowHeight / 2
+        const windowLeft = windowWidth / 2
+
+        let x = this.transferInfo.x
+        let y = this.transferInfo.y
+        //缩放后的图片宽高
+        const imgWidth = newScale * defaultImgSize.width
+        const imgHeight = newScale * defaultImgSize.height
+
+        //缩放后的图片宽大于视口宽
+        if (imgWidth > windowWidth) {
+            const diffWidth = (imgWidth - windowWidth) * 0.5
+            if (x >= diffWidth + initX) {
+                x = diffWidth + initX
+            } else if (x <= -diffWidth + initX) {
+                x = -diffWidth + initX
+            } else {
+              x -= (ratio - 1) * (windowLeft - x) - origin.x
+            }
+        } else {
+            //图片宽度小于视口，x轴偏移量为初始偏移量
+            x = initX
+        }
+        if (imgHeight > windowHeight) {
+            const diffHeight = (imgHeight - windowHeight) * 0.5
+            if (y >= diffHeight + initY) {
+                y = diffHeight + initY
+            } else if (y <= -diffHeight + initY) {
+                y = -diffHeight + initY
+            } else {
+                y -= (ratio - 1) * (windowTop - y) - origin.y
+            }
+        } else {
+            y = initY
+        }
+        this.transferInfo = {
+            x,
+            y,
             scale:newScale
         }
-        this.transition='none'
+        this.transition = 'none'
         this.setImgPosition()
     }
     /**
@@ -154,7 +212,7 @@ class PCGesture{
     dblclick(event){
         event.preventDefault()
         event.stopPropagation()
-        const {windowWidth,windowHeight,defaultImgSize,imgEl}= this
+        const {windowWidth,windowHeight,defaultImgSize}= this
         let scale=this.transferInfo.scale
         if(scale<=1){
             //放大
@@ -182,8 +240,8 @@ class PCGesture{
         }
         this.mousemove=this.mousemove.bind(this)
         this.mouseup=this.mouseup.bind(this)
-        imgEl.addEventListener('mousemove',this.mousemove,false)
-        imgEl.addEventListener('mouseup',this.mouseup,false)
+        document.addEventListener('mousemove',this.mousemove,false)
+        document.addEventListener('mouseup',this.mouseup,false)
     }
     /**
      * 鼠标移动
@@ -257,9 +315,8 @@ class PCGesture{
      * 鼠标按键抬起
      */
     mouseup(){
-        const {imgEl}=this
-        imgEl.removeEventListener('mousemove',this.mousemove,false)
-        imgEl.removeEventListener('mouseup',this.mouseup,false)
+        document.removeEventListener('mousemove',this.mousemove,false)
+        document.removeEventListener('mouseup',this.mouseup,false)
     }
     setImgPosition(){
         const {imgEl,transferInfo}=this

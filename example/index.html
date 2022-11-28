@@ -24,13 +24,15 @@
 </head>
 <body>
     <div id="window">
-        <img src="./image/1.jpg" alt="" >
+        <img src="./image/0.jpg" alt="" >
     </div>
+    <!-- 引入js -->
     <script src="../src/index.js"></script>
     <script>
         //获取window和img元素
         const windowEl=document.getElementById('window')
         const imgEl=document.querySelector('img')
+        //传入图片元素和视口元素
         const gesture=new PCGesture(imgEl,windowEl)
         gesture.init()
     </script>
