@@ -115,7 +115,7 @@ class PCGesture{
     destory(){
         const {imgEl,windowEl}=this
         windowEl.removeEventListener('WheelEvent', this.wheel, false)
-        imgEl.removeEventListener('dbclick',this.dbclick,false)
+        imgEl.removeEventListener('dblclick',this.dblclick,false)
         imgEl.removeEventListener('mousedown',this.mousedown,false)
         document.removeEventListener('mousemove',this.mousemove,false)
         document.removeEventListener('mouseup',this.mouseup,false)
@@ -159,13 +159,7 @@ class PCGesture{
         const initX = (windowWidth - defaultImgSize.width) * 0.5
         const initY = (windowHeight - defaultImgSize.height) * 0.5 
 
-        const origin = {
-            x: (ratio - 1) * defaultImgSize.width * 0.5,
-            y: (ratio - 1) * defaultImgSize.height * 0.5,
-        }
-        const windowTop = windowHeight / 2
-        const windowLeft = windowWidth / 2
-
+        //当前偏移量
         let x = this.transferInfo.x
         let y = this.transferInfo.y
         //缩放后的图片宽高
@@ -175,12 +169,14 @@ class PCGesture{
         //缩放后的图片宽大于视口宽
         if (imgWidth > windowWidth) {
             const diffWidth = (imgWidth - windowWidth) * 0.5
+            //判断是否到了左右边界
             if (x >= diffWidth + initX) {
                 x = diffWidth + initX
             } else if (x <= -diffWidth + initX) {
                 x = -diffWidth + initX
             } else {
-              x -= (ratio - 1) * (windowLeft - x) - origin.x
+                //初始偏移量+偏移比率
+                x = initX + (x - initX) * ratio
             }
         } else {
             //图片宽度小于视口，x轴偏移量为初始偏移量
@@ -193,7 +189,7 @@ class PCGesture{
             } else if (y <= -diffHeight + initY) {
                 y = -diffHeight + initY
             } else {
-                y -= (ratio - 1) * (windowTop - y) - origin.y
+                y = initY + (x - initY) * ratio
             }
         } else {
             y = initY
@@ -233,6 +229,7 @@ class PCGesture{
      * 鼠标按键落下
      */
     mousedown(event){
+        console.log("%c Line:236 🥪 event", "color:#b03734", event);
         event.preventDefault()
         this.lastPoint={
             x:event.clientX,
